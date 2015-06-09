@@ -3,6 +3,7 @@ import tornado.web
 import json
 import logging
 logger = logging.getLogger('logs/affiliate.application.log')
+logger.setLevel(logging.DEBUG)
 
 from utils.common import JsonHandler
 

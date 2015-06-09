@@ -3,6 +3,7 @@ import tornado.web
 import json
 import logging
 logger = logging.getLogger('logs/affiliate.application.log')
+logger.setLevel(logging.DEBUG)
 
 class BaseHandler(tornado.web.RequestHandler):
     @property
@@ -45,4 +46,6 @@ class JsonHandler(BaseHandler):
 
 	def write_json(self):
 		output = json.dumps(self.response)
+		logger.info('write output %s' % output)
 		self.write(output)
+

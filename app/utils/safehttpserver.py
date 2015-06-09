@@ -5,6 +5,7 @@ import tornado.web
 import tornado.options
 import logging
 logger = logging.getLogger('logs/affiliate.application.log')
+logger.setLevel(logging.DEBUG)
 
 class SafeHTTPServer(tornado.httpserver.HTTPServer):
     _stopped = False
