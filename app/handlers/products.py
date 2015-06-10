@@ -13,11 +13,16 @@ from ..models.product import Product
 
 class ProductHandler(CacheJsonHandler):
 	@gen.coroutine
-	@cache(60) # set the cache expires
 	def get(self):
 		try:
-			products = self.db.query(Product).all()
-			self.response['product_list'] = products
+			criteria = self.db.query(Product)
+
+			# filtering
+			if 'is_affiliate_ready' in self.request.arguments:
+				criteria.filter(Product.is_affiliate_ready == self.request.get('is_affiliate_ready'))
+
+			products = criteria.all()
+			self.response = products
 			self.write_json()
 		except Exception as error:
 			logger.exception(error.message)

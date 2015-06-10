@@ -22,7 +22,7 @@ class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
             (r"/", HomeHandler),
-            (r"/products", ProductHandler)
+            (r"/api/v1/products", ProductHandler)
         ]
         settings = dict(
             xsrf_cookies=True,

@@ -3,7 +3,6 @@ import tornado.web
 import json
 import decimal
 import datetime
-import database
 #sqla
 from sqlalchemy.ext.declarative import DeclarativeMeta
 #cache
@@ -52,8 +51,8 @@ class JsonHandler(BaseHandler):
 				self.request.arguments.update(json_data)
 			except ValueError, e:
 				logger.debug(e.message)
-				message = 'Unable to parse JSON.'
-				self.send_error(400, message=message) # Bad Request
+				message = 'Unsupported Media Type'
+				self.send_error(415, message=message) # Bad Request
 
 		# Set up response dictionary.
 		self.response = dict()
