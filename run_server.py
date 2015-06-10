@@ -10,6 +10,7 @@ import logging
 
 # momoko
 import momoko
+import psycopg2
 
 # application
 from app.application import Application
@@ -49,6 +50,7 @@ def main():
         max_size=3,
         ioloop=ioloop,
         raise_connect_errors=False,
+        cursor_factory=psycopg2.extras.DictCursor
     )
 
     # this is a one way to run ioloop in sync
