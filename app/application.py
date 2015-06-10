@@ -11,6 +11,10 @@ logger.setLevel(logging.DEBUG)
 
 from utils.common import JsonHandler
 
+# sqla
+from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session, sessionmaker
+
 # resource handler
 from handlers.products import ProductHandler
 
@@ -27,11 +31,15 @@ class Application(tornado.web.Application):
         )
         self.redis = redis.Redis()
         self.cache = RedisCacheBackend(self.redis)
+        
+        # sqla
+        engine = create_engine('postgresql+psycopg2://postgres:postgres@localhost:5432/shortlrdb')
+        self.db = scoped_session(sessionmaker(bind=engine))
 
         super(Application, self).__init__(handlers, **settings)
 
 class HomeHandler(JsonHandler):
     def get(self):
         #write response
-        self.response['title'] = "Jualio Affiliate Web Service"
+        self.response['title'] = "Jualio Affiliate API"
         self.write_json()

@@ -3,6 +3,9 @@ import tornado.web
 import json
 import decimal
 import datetime
+import database
+#sqla
+from sqlalchemy.ext.declarative import DeclarativeMeta
 #cache
 from cache import RedisCacheBackend, CacheMixin
 import logging
@@ -10,16 +13,28 @@ logger = logging.getLogger('logs/affiliate.application.log')
 logger.setLevel(logging.DEBUG)
 
 class BaseHandler(tornado.web.RequestHandler):
-    @property
-    def db(self):
-        return self.application.db
+	@property
+	def db(self):
+		return self.application.db
 
-class CustomJSONEncoder(json.JSONEncoder):
+class AlchemyEncoder(json.JSONEncoder):
 	def default(self, obj):
 		if isinstance(obj, decimal.Decimal):
 			return float(obj)
 		elif isinstance(obj, datetime.datetime):
 			return obj.isoformat()
+		elif isinstance(obj.__class__, DeclarativeMeta):
+			# an SQLAlchemy class
+			fields = {}
+			for field in [x for x in dir(obj) if not x.startswith('_') and x != 'metadata']:
+				data = obj.__getattribute__(field)
+				try:
+					json.dumps(data) # this will fail on non-encodable values, like other classes
+					fields[field] = data
+				except TypeError:
+					fields[field] = None
+			# a json-encodable dict
+			return fields
 		else:
 			return json.JSONEncoder.default(self, obj)
 
@@ -40,7 +55,7 @@ class JsonHandler(BaseHandler):
 				message = 'Unable to parse JSON.'
 				self.send_error(400, message=message) # Bad Request
 
-        # Set up response dictionary.
+		# Set up response dictionary.
 		self.response = dict()
 
 	def set_default_headers(self):
@@ -57,10 +72,11 @@ class JsonHandler(BaseHandler):
 		self.write_json()
 
 	def write_json(self):
-		output = json.dumps(self.response, cls=CustomJSONEncoder)
+		output = json.dumps(self.response, cls=AlchemyEncoder)
 		# logger.info('write output %s' % output)
 		self.write(output)
 
 class CacheJsonHandler(CacheMixin, JsonHandler):
-    def prepare(self):
-        super(CacheJsonHandler, self).prepare()
+	def prepare(self):
+		super(CacheJsonHandler, self).prepare()
+
