@@ -1,6 +1,10 @@
 #tornado
 import tornado.web
 import json
+import decimal
+import datetime
+#cache
+from cache import RedisCacheBackend, CacheMixin
 import logging
 logger = logging.getLogger('logs/affiliate.application.log')
 logger.setLevel(logging.DEBUG)
@@ -10,6 +14,14 @@ class BaseHandler(tornado.web.RequestHandler):
     def db(self):
         return self.application.db
 
+class CustomJSONEncoder(json.JSONEncoder):
+	def default(self, obj):
+		if isinstance(obj, decimal.Decimal):
+			return float(obj)
+		elif isinstance(obj, datetime.datetime):
+			return obj.isoformat()
+		else:
+			return json.JSONEncoder.default(self, obj)
 
 class JsonHandler(BaseHandler):
 	"""RequestHandler for JSON request and response"""
@@ -45,7 +57,10 @@ class JsonHandler(BaseHandler):
 		self.write_json()
 
 	def write_json(self):
-		output = json.dumps(self.response)
-		logger.info('write output %s' % output)
+		output = json.dumps(self.response, cls=CustomJSONEncoder)
+		# logger.info('write output %s' % output)
 		self.write(output)
 
+class CacheJsonHandler(CacheMixin, JsonHandler):
+    def prepare(self):
+        super(CacheJsonHandler, self).prepare()

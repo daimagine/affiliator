@@ -6,3 +6,4 @@ src/
 .Python
 pip-selfcheck.json
 *.pyc
+dump.rdb

@@ -2,21 +2,22 @@
 import tornado.web
 import json
 from tornado import gen
+from ..utils.cache import cache
 import logging
 logger = logging.getLogger('logs/affiliate.application.log')
 logger.setLevel(logging.DEBUG)
 
-from ..utils.common import JsonHandler
+from ..utils.common import JsonHandler, CacheJsonHandler
 
-class ProductHandler(JsonHandler):
+class ProductHandler(CacheJsonHandler):
 	@gen.coroutine
+	@cache(60) # set the cache expires
 	def get(self):
 		try:
 			cursor = yield self.db.execute('SELECT * from product;')
-			results = cursor.fetchall()
-			self.response['message'] = results
+			self.response['product_list'] = cursor.fetchall()
 			self.write_json()
 		except Exception as error:
 			logger.exception(error.message)
-			message = error.message
+			message = 'Failed to fetch data'
 			self.send_error(500, message=message)

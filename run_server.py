@@ -27,8 +27,8 @@ dsn = 'dbname=%s user=%s password=%s host=%s port=%s' % (
 
 assert (db_database or db_user or db_password or db_host or db_port) is not None, (
     'Environment variables for the examples are not set. Please set the following '
-    'variables: MOMOKO_TEST_DB, MOMOKO_TEST_USER, MOMOKO_TEST_PASSWORD, '
-    'MOMOKO_TEST_HOST, MOMOKO_TEST_PORT')
+    'variables: MOMOKO_DB, MOMOKO_USER, MOMOKO_PASSWORD, '
+    'MOMOKO_HOST, MOMOKO_PORT')
 
 
 # cmd line options
