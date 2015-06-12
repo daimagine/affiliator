@@ -8,25 +8,35 @@ import logging
 logger = logging.getLogger('logs/affiliate.application.log')
 logger.setLevel(logging.DEBUG)
 
-from ..utils.common import JsonHandler, CacheJsonHandler
+from ..utils.common import ParseUtil, JsonHandler, CacheJsonHandler
+from ..models.product import Product, ProductSchema
 
 class ProductHandler(CacheJsonHandler):
 	@gen.coroutine
-	@cache(60) # set the cache expires
-	def get(self):
+	def get(self, id=None):
 		try:
-			cursor = yield self.db.execute('SELECT * from product as p inner join customer as c on p.customer_id = c.id;')
-			rows = cursor.fetchall()
-			results = []
-			for row in rows:
-				p = collections.OrderedDict()
-				p['id'] = row['id']
-				p['name'] = row['name']
-				results.append(p)
+			criteria = self.db.query(Product)
+			if id == None:
+				# filtering
+				if 'affiliate' in self.request.arguments:
+					affiliate = ParseUtil.parseBool(self.get_argument('affiliate'))
+					logger.debug('affiliate criteria: %s' % affiliate)
+					criteria = criteria.filter(Product.is_affiliate_ready == affiliate)
 
-			self.response['product_list'] = results
+				products = criteria.all()
+				serializer = ProductSchema(many= True)
+				self.response = serializer.dump(products).data
+
+			else:
+				criteria = self.db.query(Product).filter(Product.id == id)
+				product = criteria.one()
+				serializer = ProductSchema()
+				self.response = serializer.dump(product).data
+
 			self.write_json()
+
 		except Exception as error:
 			logger.exception(error.message)
 			message = 'Failed to fetch data'
 			self.send_error(500, message=message)
+

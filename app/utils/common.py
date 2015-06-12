@@ -3,25 +3,19 @@ import tornado.web
 import json
 import decimal
 import datetime
+#sqla
+from sqlalchemy.ext.declarative import DeclarativeMeta
 #cache
 from cache import RedisCacheBackend, CacheMixin
+from encoder import model_json
 import logging
 logger = logging.getLogger('logs/affiliate.application.log')
 logger.setLevel(logging.DEBUG)
 
 class BaseHandler(tornado.web.RequestHandler):
-    @property
-    def db(self):
-        return self.application.db
-
-class CustomJSONEncoder(json.JSONEncoder):
-	def default(self, obj):
-		if isinstance(obj, decimal.Decimal):
-			return float(obj)
-		elif isinstance(obj, datetime.datetime):
-			return obj.isoformat()
-		else:
-			return json.JSONEncoder.default(self, obj)
+	@property
+	def db(self):
+		return self.application.db
 
 class JsonHandler(BaseHandler):
 	"""RequestHandler for JSON request and response"""
@@ -29,38 +23,50 @@ class JsonHandler(BaseHandler):
 		if self.request.body:
 			try:
 				json_data = json.loads(self.request.body)
-				for k, v in json_data.items():
+				#for k, v in json_data.items():
                     # Tornado expects values in the argument dict to be lists.
                     # in tornado.web.RequestHandler._get_argument the last argument is returned.
-					json_data[k] = [v]
-				self.request.arguments.pop(self.request.body)
-				self.request.arguments.update(json_data)
+				#	json_data[k] = [v]
+				#self.request.arguments.update(json_data)
+				self.request.data = json_data
+				logger.debug('request body json data')
+				logger.debug(json_data)
 			except ValueError, e:
 				logger.debug(e.message)
-				message = 'Unable to parse JSON.'
-				self.send_error(400, message=message) # Bad Request
+				message = 'Unsupported Media Type'
+				self.send_error(415, message=message) # Bad Request
 
-        # Set up response dictionary.
+		# Set up response dictionary.
 		self.response = dict()
 
 	def set_default_headers(self):
 		self.set_header('Content-Type', 'application/vnd.api+json')
 
 	def write_error(self, status_code, **kwargs):
+		logger.exception('write_error with status_code %i' % status_code)
+		response = dict()
 		if 'message' not in kwargs:
 			if status_code == 405:
-				kwargs['message'] = 'Invalid HTTP method.'
+				response['message'] = 'Invalid HTTP method.'
 			else:
-				kwargs['message'] = 'Unknown error.'
+				response['message'] = 'Unknown error.'
+		else:
+			response['message'] = kwargs['message']
 
-		self.response = kwargs
-		self.write_json()
-
-	def write_json(self):
-		output = json.dumps(self.response, cls=CustomJSONEncoder)
-		# logger.info('write output %s' % output)
+		output = json.dumps(response)
 		self.write(output)
 
+	def write_json(self):
+		output = json.dumps(self.response)
+		self.write(output)
+
+
 class CacheJsonHandler(CacheMixin, JsonHandler):
-    def prepare(self):
-        super(CacheJsonHandler, self).prepare()
+	def prepare(self):
+		super(CacheJsonHandler, self).prepare()
+
+
+class ParseUtil(object):
+	@staticmethod
+	def parseBool(str):
+		return str[0].upper() == 'T'
