@@ -9,7 +9,7 @@ logger = logging.getLogger('logs/affiliate.application.log')
 logger.setLevel(logging.DEBUG)
 
 from ..utils.common import ParseUtil, JsonHandler, CacheJsonHandler
-from ..models.product import Product
+from ..models.product import Product, ProductSchema
 
 class ProductHandler(CacheJsonHandler):
 	@gen.coroutine
@@ -24,11 +24,15 @@ class ProductHandler(CacheJsonHandler):
 					criteria = criteria.filter(Product.is_affiliate_ready == affiliate)
 
 				products = criteria.all()
-				self.response = products
+				serializer = ProductSchema(many= True)
+				self.response = serializer.dump(products).data
+
 			else:
 				criteria = self.db.query(Product).filter(Product.id == id)
 				product = criteria.one()
-				self.response = product
+				serializer = ProductSchema()
+				self.response = serializer.dump(product).data
+
 			self.write_json()
 
 		except Exception as error:

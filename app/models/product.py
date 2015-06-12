@@ -20,7 +20,6 @@ class ProductSchema(Schema):
 	class Meta:
 		fields = ('id', 'name', 'is_affiliate_ready', 'affiliate_percentage', 'affiliate_fee', 'affiliate_fee_type')
 
-
 # metadata
 metadata = Base.metadata
 

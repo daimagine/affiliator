@@ -57,7 +57,7 @@ class JsonHandler(BaseHandler):
 		self.write(output)
 
 	def write_json(self):
-		output = model_json(self.response)
+		output = json.dumps(self.response)
 		self.write(output)
 
 

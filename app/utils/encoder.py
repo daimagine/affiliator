@@ -25,5 +25,5 @@ class AlchemyEncoder(json.JSONEncoder):
             return json.JSONEncoder.default(self, obj)
 
 def model_json(obj):
-    return json.dumps(obj, cls=AlchemyEncoder)
+    return json.dumps(obj)
 

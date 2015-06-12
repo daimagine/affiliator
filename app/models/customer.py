@@ -15,7 +15,6 @@ class CustomerSchema(Schema):
 	class Meta:
 		fields = ('id', 'name', 'email')
 
-
 # metadata
 metadata = Base.metadata
 

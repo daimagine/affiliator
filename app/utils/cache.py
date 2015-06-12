@@ -35,11 +35,11 @@ class CacheMixin(object):
         super(CacheMixin, self).prepare()
         will_cache = True
         if hasattr(self, "cache_enabled"):
-            logger.debug('cache_enabled is %s', self.cache_enabled)
             will_cache = self.cache_enabled
+        logger.debug('cache_enabled is %s', will_cache)
 
         key = self._generate_key(self.request)
-        if self.cache.exists(self._prefix(key)) & will_cache:
+        if self.cache.exists(self._prefix(key)) and will_cache:
             logger.debug('return cache from redis %s' % key)
             rv = pickle.loads(self.cache.get(self._prefix(key)))
             self.write_cache(rv)
@@ -58,10 +58,10 @@ class CacheMixin(object):
     def write(self, chunk):
         will_cache = True
         if hasattr(self, "cache_enabled"):
-            logger.debug('cache_enabled is %s', self.cache_enabled)
             will_cache = self.cache_enabled
+        logger.debug('cache_enabled is %s', will_cache)
 
-        if self.get_status() == 200 & will_cache:
+        if self.get_status() == 200 and will_cache:
             pickled = pickle.dumps(chunk)
             key = self._generate_key(self.request)
             logger.debug('write cache to redis %s' % key)

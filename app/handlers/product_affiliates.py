@@ -20,7 +20,6 @@ from ..models.affiliate import Affiliate, AffiliateSchema
 
 class ProductAffiliateHandler(CacheJsonHandler):
 	@gen.coroutine
-	@cache(cache_enabled=False)
 	def get(self):
 		try:
 			criteria = self.db.query(Affiliate).options(joinedload(Affiliate.customer)).options(joinedload(Affiliate.product))
@@ -31,8 +30,8 @@ class ProductAffiliateHandler(CacheJsonHandler):
 				criteria = criteria.filter(Customer.id == customer_id)
 
 			affiliates = criteria.all()
-			serializer = AffiliateSchema(many= True)
-			self.response = serializer.dump(affiliates)
+			serializer = AffiliateSchema(many=True)
+			self.response = serializer.dump(affiliates).data
 			self.write_json()
 
 		except Exception as error:
