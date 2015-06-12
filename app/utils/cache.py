@@ -15,15 +15,15 @@ import logging
 logger = logging.getLogger('logs/affiliate.application.log')
 logger.setLevel(logging.DEBUG)
  
-def cache(expires=7200):
+def cache(expires=7200, cache_enabled=True):
     def _func(func):
         @functools.wraps(func)
         def wrapper(handler, *args, **kwargs):
             handler.expires = expires
+            handler.cache_enabled = cache_enabled
             return func(handler, *args, **kwargs)
         return wrapper
     return _func
- 
  
 class CacheMixin(object):
  
@@ -33,8 +33,13 @@ class CacheMixin(object):
  
     def prepare(self):
         super(CacheMixin, self).prepare()
+        will_cache = True
+        if hasattr(self, "cache_enabled"):
+            logger.debug('cache_enabled is %s', self.cache_enabled)
+            will_cache = self.cache_enabled
+
         key = self._generate_key(self.request)
-        if self.cache.exists(self._prefix(key)):
+        if self.cache.exists(self._prefix(key)) & will_cache:
             logger.debug('return cache from redis %s' % key)
             rv = pickle.loads(self.cache.get(self._prefix(key)))
             self.write_cache(rv)
@@ -51,7 +56,12 @@ class CacheMixin(object):
         super(CacheMixin, self).write(chunk)
  
     def write(self, chunk):
-        if self.get_status() == 200:
+        will_cache = True
+        if hasattr(self, "cache_enabled"):
+            logger.debug('cache_enabled is %s', self.cache_enabled)
+            will_cache = self.cache_enabled
+
+        if self.get_status() == 200 & will_cache:
             pickled = pickle.dumps(chunk)
             key = self._generate_key(self.request)
             logger.debug('write cache to redis %s' % key)

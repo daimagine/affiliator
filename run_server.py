@@ -10,7 +10,7 @@ import logging
 
 # application
 from app.application import Application
-from app.utils.safehttpserver import SafeHTTPServer
+from app.utils.safe_httpserver import SafeHTTPServer
 
 
 # cmd line options
